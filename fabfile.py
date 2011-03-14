@@ -13,12 +13,12 @@
 
 from fabric.api import *
 from fabric.contrib import files
-import os, glob, shutil
+import os, glob, shutil, datetime
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 
 def create(lang, name):
-    ''' Creates the file '''
+    ''' Creates the new dojo file '''
 
     # check if the language is supported... it means, check if there is
     # an existent template for this language in the TEMPLATES_DIR
@@ -27,9 +27,12 @@ def create(lang, name):
     if not template:
         print 'ERROR: Language not supported.'
         return
-        
+    
+    dtstr = datetime.datetime.now().strftime('%Y-%m-%d %T')
+
     # create the output file and rename to the same name of the class
     output = os.path.basename(template[0])
     output = output.replace(lang, name, 1).lower()
     shutil.copy(template[0], output)
     local(r"sed -i 's/CLASSNAME/%s/g' %s" % (name, output))
+    local(r"sed -i 's/DATETIME/%s/g' %s" % (dtstr, output))

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# automatically created by Dojo Polyglot Environ on DATETIME
+# https://github.com/afurlan/dojo-polyglot-environ
 
 import unittest2 as unittest
 

@@ -1,4 +1,7 @@
 <?php
+# automatically created by Dojo Polyglot Environ on DATETIME
+# https://github.com/afurlan/dojo-polyglot-environ
+
 require_once 'PHPUnit/Framework.php';
 
 class CLASSNAME {
