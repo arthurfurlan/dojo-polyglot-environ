@@ -1,4 +1,4 @@
-#!/usr/bin/env fab
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2011 Arthur Furlan <afurlan@afurlan.org>
@@ -11,9 +11,10 @@
 # /usr/share/common-licenses/GPL-2
 
 
-from fabric.api import *
-from fabric.contrib import files
-import os, glob, shutil, datetime
+import os
+import glob
+import subprocess
+from datetime import datetime
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates')
 
@@ -30,14 +31,18 @@ def create(lang, name):
         print 'ERROR: Language "%s" not supported.' % lang
         return
    
-    # create the output file and rename to the same name of the class
-    dt_str = datetime.datetime.now().strftime('%Y-%m-%d %T')
+    # create the output file name based on language
     output = os.path.basename(template[0])
     output = output.replace(lang, name, 1).lower()
-    shutil.copy(template[0], output)
-    local(r"sed -i 's/CLASSNAME/%s/g' %s" % (name, output))
-    local(r"sed -i 's/DATETIME/%s/g' %s" % (dt_str, output))
-    local(r"chmod u+x %s" % output)
+
+    # write the content of the output file
+    ft, fo = open(template[0]), open(output, 'w+')
+    for line in ft:
+        line = line.replace('CLASSNAME', name)
+        line = line.replace('DATETIME', datetime.now().strftime('%Y-%m-%d %T'))
+        fo.write(line)
+    fo.close()
+    os.chmod(output, 0744)
 
 def execute(fname, lang=None):
     ''' Execute the file in order to check if the tests passed '''
@@ -48,12 +53,15 @@ def execute(fname, lang=None):
         l, e = os.path.basename(t).split('.')
         lang_ext[e] = l
 
-    # check if the extension is supported
+    # check if the file extension is supported
     extension = fname.split('.')[-1]
     if extension not in lang_ext and not lang:
         print 'ERROR: Extension "%s" not supported.' % extension
         return
+    elif not lang:
+        lang = lang_ext[extension]
     
     if '/' not in fname:
         fname = './' + fname
-    local(fname)
+    cmd_args = ['env', lang, fname]
+    subprocess.call(cmd_args)
