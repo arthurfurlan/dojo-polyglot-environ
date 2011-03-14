@@ -12,20 +12,27 @@
 
 
 import os
+import sys
 import glob
 import subprocess
 from datetime import datetime
+from cStringIO import StringIO
 
-TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates')
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+TMPL_DIR = os.path.join(ROOT_DIR, 'templates')
+ICON_FILES = {
+    'error': os.path.join(ROOT_DIR, 'images/error.png'),
+    'success': os.path.join(ROOT_DIR, 'images/success.png'),
+}
 
 def _get_template_files(name='*'):
-    return glob.glob(os.path.join(TEMPLATES_DIR, name + '.*'))
+    return glob.glob(os.path.join(TMPL_DIR, name + '.*'))
 
 def create(lang, name):
     ''' Creates the new dojo file '''
 
     # check if the language is supported... it means, check if there is
-    # an existent template for this language in the TEMPLATES_DIR
+    # an existent template for this language in the TMPL_DIR
     template = _get_template_files(lang)
     if not template:
         print 'ERROR: Language "%s" not supported.' % lang
@@ -44,7 +51,18 @@ def create(lang, name):
     fo.close()
     os.chmod(output, 0744)
 
-def execute(fname, lang=None):
+def _runtests_notify(command_args):
+    notify_args = ['notify-send', '-i']
+    retcode = subprocess.call(command_args)
+    if not retcode:
+        notify_args.append(ICON_FILES['success'])
+        notify_args.append('Tests passed.')
+    else:
+        notify_args.append(ICON_FILES['error'])
+        notify_args.append('Tests failed.')
+    subprocess.call(notify_args)
+
+def runtests(fname, lang=None):
     ''' Execute the file in order to check if the tests passed '''
 
     # create dict of "extensions vs. languages"
@@ -63,5 +81,9 @@ def execute(fname, lang=None):
     
     if '/' not in fname:
         fname = './' + fname
-    cmd_args = ['env', lang, fname]
-    subprocess.call(cmd_args)
+    command_args = [ lang, fname]
+    _runtests_notify(command_args)
+
+if __name__ == '__main__':
+    #create('python', 'abcd')
+    runtests('abcd.py')
