@@ -36,3 +36,4 @@ def create(lang, name):
     shutil.copy(template[0], output)
     local(r"sed -i 's/CLASSNAME/%s/g' %s" % (name, output))
     local(r"sed -i 's/DATETIME/%s/g' %s" % (dtstr, output))
+    local(r"chmod u+x %s" % output)
