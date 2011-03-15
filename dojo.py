@@ -10,11 +10,16 @@
 # On Debian systems, you can find the full text of the license in
 # /usr/share/common-licenses/GPL-2
 
+import pygtk
+pygtk.require('2.0')
+import gtk
 
 import os
 import sys
 import glob
+import time
 import optparse
+import threading
 import subprocess
 from datetime import datetime
 
@@ -25,7 +30,11 @@ ICON_FILES = {
     'success': os.path.join(ROOT_DIR, 'images/success.png'),
 }
 
-class DojoPolyglotEnviron:
+class DojoPolyglotEnviron(gtk.Window):
+
+    def __init__(self):
+        super(DojoPolyglotEnviron, self).__init__()
+        self.last_mtime = 0
 
     def _get_template_files(self, name='*'):
         '''
@@ -49,7 +58,22 @@ class DojoPolyglotEnviron:
             notify_args.append('Tests failed.')
         subprocess.call(notify_args)
 
-    def _test(self, fname, lang=None):
+    def _test_if_modified(self, path, timeout, lang=None):
+        tcount = 0
+        while True:
+            mtime = os.stat(path).st_mtime
+            if mtime > self.last_mtime:
+                self.last_mtime = mtime
+                self._test(path)
+
+            tcount += 1
+            if tcount >= timeout:
+                self._timeout_message()
+                tcount = 0
+
+            time.sleep(1)
+
+    def _test(self, path, lang=None):
         '''
         Execute the file in order to check if the tests passed
         '''
@@ -61,17 +85,25 @@ class DojoPolyglotEnviron:
             lang_ext[e] = l
 
         # check if the file extension is supported
-        extension = fname.split('.')[-1]
+        extension = path.split('.')[-1]
         if extension not in lang_ext and not lang:
             print 'ERROR: Extension "%s" not supported.' % extension
             return
         elif not lang:
             lang = lang_ext[extension]
         
-        if '/' not in fname:
-            fname = './' + fname
-        command_args = [ lang, fname]
+        if '/' not in path:
+             path = './' + path
+        command_args = ['env', lang, path]
         self._test_and_notify(command_args)
+
+    def _timeout_message(self):
+        message = 'Your time is up!'
+        md = gtk.MessageDialog(self,
+            gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
+            gtk.BUTTONS_CLOSE, 'Your time is up!')
+        md.run()
+        md.destroy()
 
     def do_create(self, lang, name):
         '''
@@ -98,8 +130,8 @@ class DojoPolyglotEnviron:
         fo.close()
         os.chmod(output, 0744)
 
-    def do_daemon(self, path, timeout):
-        pass
+    def do_daemon(self, path, timeout, lang=None):
+        self._test_if_modified(path, timeout, lang)
 
     def run(self, args):
         '''
@@ -123,12 +155,15 @@ class DojoPolyglotEnviron:
             help='session timeout (default: 300)')
         (opts, args) = parser.parse_args()
 
-        if hasattr(opts, 'create'): # create a new dojo file
-            return self.do_create(opts.language, opts.create)
-        if hasattr(opts, 'daemon'): # start the daemon
-            return self.do_daemon(opts.daemon, opts.timeout or 300)
+        if opts.c: # create a new dojo file
+            return self.do_create(opts.l, opts.c)
+        if opts.d: # start the daemon
+            timeout = int(opts.t) if opts.t else 300
+            return self.do_daemon(opts.d, timeout, opts.l)
         else:
             parser.print_help()
+
+        gtk.main()
 
 
 if __name__ == '__main__':
