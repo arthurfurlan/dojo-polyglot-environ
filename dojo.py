@@ -14,9 +14,9 @@
 import os
 import sys
 import glob
+import optparse
 import subprocess
 from datetime import datetime
-from cStringIO import StringIO
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 TMPL_DIR = os.path.join(ROOT_DIR, 'templates')
@@ -28,9 +28,17 @@ ICON_FILES = {
 class DojoPolyglotEnviron:
 
     def _get_template_files(self, name='*'):
+        '''
+        List all available templates based on "name"
+        '''
+
         return glob.glob(os.path.join(TMPL_DIR, name + '.*'))
 
-    def _runtests_notify(self, command_args):
+    def _test_and_notify(self, command_args):
+        '''
+        Execute a command and notify if it was successful or not
+        '''
+
         notify_args = ['notify-send', '-i']
         retcode = subprocess.call(command_args)
         if not retcode:
@@ -41,8 +49,10 @@ class DojoPolyglotEnviron:
             notify_args.append('Tests failed.')
         subprocess.call(notify_args)
 
-    def runtests(self, fname, lang=None):
-        ''' Execute the file in order to check if the tests passed '''
+    def _test(self, fname, lang=None):
+        '''
+        Execute the file in order to check if the tests passed
+        '''
 
         # create dict of "extensions vs. languages"
         lang_ext = {}
@@ -61,10 +71,12 @@ class DojoPolyglotEnviron:
         if '/' not in fname:
             fname = './' + fname
         command_args = [ lang, fname]
-        self._runtests_notify(command_args)
+        self._test_and_notify(command_args)
 
-    def create(self, lang, name):
-        ''' Creates the new dojo file '''
+    def do_create(self, lang, name):
+        '''
+        Create a new dojo file
+        '''
 
         # check if the language is supported... it means, check if there is
         # an existent template for this language in the TMPL_DIR
@@ -86,7 +98,39 @@ class DojoPolyglotEnviron:
         fo.close()
         os.chmod(output, 0744)
 
+    def do_daemon(self, path, timeout):
+        pass
+
+    def run(self, args):
+        '''
+        Run the application via command line interface. Parse the arguments and
+        execute the action based on them.
+        '''
+
+        usage = 'Usage: %prog OPTIONS'
+        parser = optparse.OptionParser(usage=usage)
+
+        # application actions
+        parser.add_option('-c', metavar='DOJO',
+            help='create a new dojo file')
+        parser.add_option('-d', metavar='DOJO',
+            help='start the daemon for a file')
+
+        # application options
+        parser.add_option('-l', metavar='LANG',
+            help='language used in the dojo')
+        parser.add_option('-t', metavar='TIME',
+            help='session timeout (default: 300)')
+        (opts, args) = parser.parse_args()
+
+        if hasattr(opts, 'create'): # create a new dojo file
+            return self.do_create(opts.language, opts.create)
+        if hasattr(opts, 'daemon'): # start the daemon
+            return self.do_daemon(opts.daemon, opts.timeout or 300)
+        else:
+            parser.print_help()
+
+
 if __name__ == '__main__':
     dj = DojoPolyglotEnviron()
-    dj.create('python', 'abcd')
-    #runtests('abcd.py')
+    sys.exit(dj.run(sys.argv[:1]))
