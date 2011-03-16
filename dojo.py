@@ -123,9 +123,9 @@ class DojoPolyglotEnviron(gtk.Window):
         notify_args.append(ICON_FILES['timeout'])
         notify_args.append('Your time is up!')
         subprocess.call(notify_args)
-        self._toogle_pause()
+        self._toggle_pause()
 
-    def _toogle_pause(self):
+    def _toggle_pause(self):
         if self.paused:
             if self.test_passed:
                 self.tray.set_from_stock(gtk.STOCK_YES)
@@ -136,7 +136,7 @@ class DojoPolyglotEnviron(gtk.Window):
         self.paused = not self.paused
 
     def _on_tray_lclick(self, *args):
-        self._toogle_pause()
+        self._toggle_pause()
 
     def _on_tray_rclick(self, *args):
         print "right click"
