@@ -50,6 +50,11 @@ class DojoPolyglotEnviron(gtk.Window):
 
         return glob.glob(os.path.join(TMPL_DIR, name + '.*'))
 
+    def _format_time(self, seconds):
+        minutes = seconds/60
+        seconds = seconds%60
+        return '%0.2d:%0.2d' % (minutes, seconds)
+
     def _test_and_notify(self, command_args):
         '''
         Execute a command and notify if it was successful or not
@@ -77,6 +82,7 @@ class DojoPolyglotEnviron(gtk.Window):
                 self._test(path)
 
             self.tcount += 1
+            self.tray.set_tooltip(self._format_time(timeout-self.tcount))
 
             if self.tcount >= timeout:
                 self._timeout_message()
