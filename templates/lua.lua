@@ -13,4 +13,5 @@ function TestCLASSNAME:test_new()
 end
 
 require("luaunit")
-LuaUnit:run()
+os.exit(LuaUnit:run())
+

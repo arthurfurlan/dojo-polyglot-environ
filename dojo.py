@@ -23,11 +23,14 @@ import threading
 import subprocess
 from datetime import datetime
 
+gtk.threads_init()
+
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 TMPL_DIR = os.path.join(ROOT_DIR, 'templates')
 ICON_FILES = {
     'error': os.path.join(ROOT_DIR, 'images/error.png'),
     'success': os.path.join(ROOT_DIR, 'images/success.png'),
+    'timeout': os.path.join(ROOT_DIR, 'images/timeout.png'),
 }
 
 class DojoPolyglotEnviron(gtk.Window):
@@ -35,6 +38,8 @@ class DojoPolyglotEnviron(gtk.Window):
     def __init__(self):
         super(DojoPolyglotEnviron, self).__init__()
         self.last_mtime = 0
+        self.paused = False
+        self.tcount = 0
 
     def _get_template_files(self, name='*'):
         '''
@@ -53,25 +58,27 @@ class DojoPolyglotEnviron(gtk.Window):
         if not retcode:
             notify_args.append(ICON_FILES['success'])
             notify_args.append('Tests passed.')
+            self.tray.set_from_stock(gtk.STOCK_YES)
         else:
             notify_args.append(ICON_FILES['error'])
             notify_args.append('Tests failed.')
+            self.tray.set_from_stock(gtk.STOCK_NO)
         subprocess.call(notify_args)
 
     def _test_if_modified(self, path, timeout, lang=None):
-        tcount = 0
-        while True:
+        if not self.paused:
             mtime = os.stat(path).st_mtime
             if mtime > self.last_mtime:
                 self.last_mtime = mtime
                 self._test(path)
 
-            tcount += 1
-            if tcount >= timeout:
-                self._timeout_message()
-                tcount = 0
+            self.tcount += 1
 
-            time.sleep(1)
+            if self.tcount >= timeout:
+                self._timeout_message()
+                self.tcount = 0
+
+        return True
 
     def _test(self, path, lang=None):
         '''
@@ -91,19 +98,50 @@ class DojoPolyglotEnviron(gtk.Window):
             return
         elif not lang:
             lang = lang_ext[extension]
-        
+
         if '/' not in path:
              path = './' + path
         command_args = ['env', lang, path]
         self._test_and_notify(command_args)
 
     def _timeout_message(self):
+        '''
+        This dialog code is broken, should be fixed later!
+
         message = 'Your time is up!'
-        md = gtk.MessageDialog(self,
-            gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION,
-            gtk.BUTTONS_CLOSE, 'Your time is up!')
+        md = gtk.MessageDialog(None,
+            gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_WARNING,
+            gtk.BUTTONS_OK, message)
         md.run()
         md.destroy()
+        '''
+
+        notify_args = ['notify-send', '-i']
+        notify_args.append(ICON_FILES['timeout'])
+        notify_args.append('Your time is up!')
+        subprocess.call(notify_args)
+        self._pause()
+
+    def _pause(self):
+        self.paused = not self.paused
+
+        if self.paused:
+            self.tray.set_from_stock(gtk.STOCK_MEDIA_PLAY)
+        else:
+            self.tray.set_from_stock(gtk.STOCK_MEDIA_PAUSE)
+
+    def _on_tray_lclick(self, *args):
+        self._pause()
+
+    def _on_tray_rclick(self, *args):
+        print "right click"
+
+    def _create_tray(self):
+        self.tray = gtk.StatusIcon()
+        self.tray.set_from_stock(gtk.STOCK_YES)
+        self.tray.connect("activate", self._on_tray_lclick)
+        self.tray.connect("popup-menu", self._on_tray_rclick)
+        self.tray.set_tooltip("Dojo Polyglot Environ")
 
     def do_create(self, lang, name):
         '''
@@ -116,7 +154,7 @@ class DojoPolyglotEnviron(gtk.Window):
         if not template:
             print 'ERROR: Language "%s" not supported.' % lang
             return
-       
+
         # create the output file name based on language
         output = os.path.basename(template[0])
         output = output.replace(lang, name, 1).lower()
@@ -131,7 +169,14 @@ class DojoPolyglotEnviron(gtk.Window):
         os.chmod(output, 0744)
 
     def do_daemon(self, path, timeout, lang=None):
-        self._test_if_modified(path, timeout, lang)
+        self._create_tray();
+
+#        t = threading.Thread(target=self._test_if_modified, args=(path, timeout, lang))
+#        t.setDaemon(True)
+#        t.start()
+
+        gtk.timeout_add(1000, self._test_if_modified, path, timeout, lang)
+        gtk.main()
 
     def run(self, args):
         '''
@@ -169,3 +214,4 @@ class DojoPolyglotEnviron(gtk.Window):
 if __name__ == '__main__':
     dj = DojoPolyglotEnviron()
     sys.exit(dj.run(sys.argv[:1]))
+
