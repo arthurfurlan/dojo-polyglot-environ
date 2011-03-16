@@ -38,6 +38,7 @@ class DojoPolyglotEnviron(gtk.Window):
     def __init__(self):
         super(DojoPolyglotEnviron, self).__init__()
         self.last_mtime = 0
+        self.test_passed = True
         self.paused = False
         self.tcount = 0
 
@@ -59,10 +60,12 @@ class DojoPolyglotEnviron(gtk.Window):
             notify_args.append(ICON_FILES['success'])
             notify_args.append('Tests passed.')
             self.tray.set_from_stock(gtk.STOCK_YES)
+            self.test_passed = True
         else:
             notify_args.append(ICON_FILES['error'])
             notify_args.append('Tests failed.')
             self.tray.set_from_stock(gtk.STOCK_NO)
+            self.test_passed = False
         subprocess.call(notify_args)
 
     def _test_if_modified(self, path, timeout, lang=None):
@@ -120,18 +123,20 @@ class DojoPolyglotEnviron(gtk.Window):
         notify_args.append(ICON_FILES['timeout'])
         notify_args.append('Your time is up!')
         subprocess.call(notify_args)
-        self._pause()
+        self._toogle_pause()
 
-    def _pause(self):
-        self.paused = not self.paused
-
+    def _toogle_pause(self):
         if self.paused:
-            self.tray.set_from_stock(gtk.STOCK_MEDIA_PLAY)
+            if self.test_passed:
+                self.tray.set_from_stock(gtk.STOCK_YES)
+            else:
+                self.tray.set_from_stock(gtk.STOCK_NO)
         else:
             self.tray.set_from_stock(gtk.STOCK_MEDIA_PAUSE)
+        self.paused = not self.paused
 
     def _on_tray_lclick(self, *args):
-        self._pause()
+        self._toogle_pause()
 
     def _on_tray_rclick(self, *args):
         print "right click"
