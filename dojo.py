@@ -18,6 +18,7 @@ import os
 import sys
 import glob
 import time
+import gobject
 import optparse
 import threading
 import subprocess
@@ -177,7 +178,7 @@ class DojoPolyglotEnviron(gtk.Window):
 #        t.setDaemon(True)
 #        t.start()
 
-        gtk.timeout_add(1000, self._test_if_modified, path, timeout, lang)
+        gobject.timeout_add(1000, self._test_if_modified, path, timeout, lang)
         gtk.main()
 
     def run(self, args):
