@@ -23,7 +23,7 @@ import threading
 import subprocess
 from datetime import datetime
 
-gtk.threads_init()
+gtk.gdk.threads_init()
 
 ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
 TMPL_DIR = os.path.join(ROOT_DIR, 'templates')
