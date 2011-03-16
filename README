@@ -1,0 +1,33 @@
+The dojo-polyglot-environ aims to be a multi-language environment for
+dojos sesions. It implements features of different tools and try to
+make easy the use of them.
+
+
+Creating your dojo script
+=========================
+
+    To create the initial script of your dojo session, execute the
+following code with the appropriate arguments:
+
+ $ ./dojo-polyglot-environ.py -c PROBLEM -l LANGUAGE
+
+ $ ./dojo-polyglot-environ.py -c FibonacciSequence -l python
+ $ ./dojo-polyglot-environ.py -c CollatzConjecture -l ruby
+   ...
+
+
+Executing the session daemon
+============================
+
+    Once you have created your dojo script, you need to start the
+daemon before start coding. You could also set the timeout of the
+session at your convenience, the default value is 300 seconds.
+
+ $ ./dojo-polyglot-environ.py -d SCRIPT [ -t TIMEOUT ]
+
+ $ ./dojo-polyglot-environ.py -c fibonaccisequence.py
+ $ ./dojo-polyglot-environ.py -c collatzconjecture.rb -t 420
+   ...
+
+
+And that's all... easy as 1, 2, 3.
