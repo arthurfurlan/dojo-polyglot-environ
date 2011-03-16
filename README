@@ -25,8 +25,8 @@ session at your convenience, the default value is 300 seconds.
 
  $ ./dojo-polyglot-environ.py -d SCRIPT [ -t TIMEOUT ]
 
- $ ./dojo-polyglot-environ.py -c fibonaccisequence.py
- $ ./dojo-polyglot-environ.py -c collatzconjecture.rb -t 420
+ $ ./dojo-polyglot-environ.py -d fibonaccisequence.py
+ $ ./dojo-polyglot-environ.py -d collatzconjecture.rb -t 420
    ...
 
 
