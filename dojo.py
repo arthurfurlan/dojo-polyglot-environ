@@ -119,11 +119,8 @@ class DojoPolyglotEnviron(gtk.Window):
         md.destroy()
         '''
 
-        notify_args = ['notify-send', '-i']
-        notify_args.append(ICON_FILES['timeout'])
-        notify_args.append('Your time is up!')
+        notify_args = ['zenity', '--warning', '--text', 'Your time is up!']
         subprocess.call(notify_args)
-        self._toggle_pause()
 
     def _toggle_pause(self):
         if self.paused:
