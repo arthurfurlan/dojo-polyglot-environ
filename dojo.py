@@ -215,5 +215,7 @@ class DojoPolyglotEnviron(gtk.Window):
 
 if __name__ == '__main__':
     dj = DojoPolyglotEnviron()
-    sys.exit(dj.run(sys.argv[:1]))
-
+    try:
+        sys.exit(dj.run(sys.argv[:1]))
+    except KeyboardInterrupt:
+        pass
