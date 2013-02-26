@@ -194,7 +194,10 @@ class DojoPolyglotEnviron(gtk.Window):
         execute the action based on them.
         '''
 
-        usage = 'Usage: %prog OPTIONS'
+        usage = """\
+Usage: %prog -c DOJO -l LANG
+       %prog -d
+       %prog --help"""
         parser = optparse.OptionParser(usage=usage)
 
         # application actions
