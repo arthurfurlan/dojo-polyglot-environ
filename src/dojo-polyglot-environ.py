@@ -16,6 +16,7 @@ import gtk
 
 import os
 import sys
+import re
 import glob
 import time
 import gobject
@@ -33,6 +34,7 @@ ICON_FILES = {
     'success': os.path.join(ROOT_DIR, 'images/success.png'),
     'timeout': os.path.join(ROOT_DIR, 'images/timeout.png'),
 }
+VALID_DOJO_NAME = re.compile("[a-zA-Z_][a-zA-Z0-9_]*$")
 
 class Error(Exception):
     pass
@@ -164,6 +166,10 @@ class DojoPolyglotEnviron(gtk.Window):
         template = self._get_template_files(lang)
         if not template:
             raise Error('Language "%s" not supported.' % lang)
+
+        if not VALID_DOJO_NAME.match(name):
+            raise Error('Invalid Dojo name %r. It should contain only valid '
+                        'symbol names.' % name)
 
         # create the output file name based on language
         output = os.path.basename(template[0])
