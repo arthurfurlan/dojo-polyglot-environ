@@ -202,7 +202,7 @@ class DojoPolyglotEnviron(gtk.Window):
 
         usage = """\
 Usage: %prog -c DOJO -l LANG
-       %prog -d
+       %prog -d DOJO.ext
        %prog --help"""
         parser = optparse.OptionParser(usage=usage)
 
