@@ -211,6 +211,8 @@ class DojoPolyglotEnviron(gtk.Window):
         (opts, args) = parser.parse_args()
 
         if opts.c: # create a new dojo file
+            if opts.l is None:
+                parser.error('-l LANG missing')
             return self.do_create(opts.l, opts.c)
         if opts.d: # start the daemon
             timeout = int(opts.t) if opts.t else 300
