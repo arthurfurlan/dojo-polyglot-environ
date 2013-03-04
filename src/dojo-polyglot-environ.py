@@ -209,7 +209,7 @@ Usage: %prog -c DOJO -l LANG
         # application actions
         parser.add_option('-c', metavar='DOJO',
             help='create a new dojo file')
-        parser.add_option('-d', metavar='DOJO',
+        parser.add_option('-d', metavar='FILE',
             help='start the daemon for a file')
 
         # application options
