@@ -1,0 +1,14 @@
+TODO
+====
+
+- Show error/fail messages of the tests on the user interface (not only in the console).
+- When the time is over the warning is hidden behind the other programs.
+- Add tests.
+- Improve the command line options handler.
+- Improve the command line options error messages.
+- Spport more languages.
+- Internationalization.
+- Add context menu to respond the right click button.
+- Show the timer in the notification toolbar.
+
+

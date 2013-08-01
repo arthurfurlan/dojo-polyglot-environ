@@ -16,6 +16,7 @@ import gtk
 
 import os
 import sys
+import re
 import glob
 import time
 import gobject
@@ -33,6 +34,10 @@ ICON_FILES = {
     'success': os.path.join(ROOT_DIR, 'images/success.png'),
     'timeout': os.path.join(ROOT_DIR, 'images/timeout.png'),
 }
+VALID_DOJO_NAME = re.compile("[a-zA-Z_][a-zA-Z0-9_]*$")
+
+class Error(Exception):
+    pass
 
 class DojoPolyglotEnviron(gtk.Window):
 
@@ -104,8 +109,7 @@ class DojoPolyglotEnviron(gtk.Window):
         # check if the file extension is supported
         extension = path.split('.')[-1]
         if extension not in lang_ext and not lang:
-            print 'ERROR: Extension "%s" not supported.' % extension
-            return
+            raise Error('Extension "%s" not supported.' % extension)
         elif not lang:
             lang = lang_ext[extension]
 
@@ -161,8 +165,11 @@ class DojoPolyglotEnviron(gtk.Window):
         # an existent template for this language in the TMPL_DIR
         template = self._get_template_files(lang)
         if not template:
-            print 'ERROR: Language "%s" not supported.' % lang
-            return
+            raise Error('Language "%s" not supported.' % lang)
+
+        if not VALID_DOJO_NAME.match(name):
+            raise Error('Invalid Dojo name %r. It should contain only valid '
+                        'symbol names.' % name)
 
         # create the output file name based on language
         output = os.path.basename(template[0])
@@ -193,13 +200,16 @@ class DojoPolyglotEnviron(gtk.Window):
         execute the action based on them.
         '''
 
-        usage = 'Usage: %prog OPTIONS'
+        usage = """\
+Usage: %prog -c DOJO -l LANG
+       %prog -d DOJO.ext
+       %prog --help"""
         parser = optparse.OptionParser(usage=usage)
 
         # application actions
         parser.add_option('-c', metavar='DOJO',
             help='create a new dojo file')
-        parser.add_option('-d', metavar='DOJO',
+        parser.add_option('-d', metavar='FILE',
             help='start the daemon for a file')
 
         # application options
@@ -210,6 +220,8 @@ class DojoPolyglotEnviron(gtk.Window):
         (opts, args) = parser.parse_args()
 
         if opts.c: # create a new dojo file
+            if opts.l is None:
+                parser.error('-l LANG missing')
             return self.do_create(opts.l, opts.c)
         if opts.d: # start the daemon
             timeout = int(opts.t) if opts.t else 300
@@ -221,8 +233,11 @@ class DojoPolyglotEnviron(gtk.Window):
 
 
 if __name__ == '__main__':
-    dj = DojoPolyglotEnviron()
     try:
-        sys.exit(dj.run(sys.argv[:1]))
+        dj = DojoPolyglotEnviron()
+        dj.run(sys.argv[:1])
+    except Error, msg:
+        sys.stderr.write("ERROR: %s\n" % msg)
+        sys.exit(1)
     except KeyboardInterrupt:
-        pass
+        sys.stderr.write("interrupted\n")
